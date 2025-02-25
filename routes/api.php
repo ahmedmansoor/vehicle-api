@@ -3,12 +3,14 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VehicleTypeController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/vehicles', [VehicleController::class, 'index']);
 Route::get('/vehicles/{vehicle}', [VehicleController::class, 'show']);
+Route::get('/vehicle-types', [VehicleTypeController::class, 'index']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {

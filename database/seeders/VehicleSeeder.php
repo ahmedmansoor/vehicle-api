@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
 
 class VehicleSeeder extends Seeder
 {
