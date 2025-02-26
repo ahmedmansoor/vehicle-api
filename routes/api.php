@@ -38,6 +38,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Vehicle routes (authenticated users only)
     Route::apiResource('vehicles', VehicleController::class);
 
+    // Unapproved vehicles route
+    Route::get('/vehicles/unapproved', [VehicleController::class, 'unapproved']);
+
     // Admin-only vehicle approval
     Route::patch('/vehicles/{id}/approve', [VehicleController::class, 'approve']);
 });

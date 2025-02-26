@@ -375,6 +375,20 @@ class VehicleController extends Controller
 
             $vehicle->save();
 
+            if (!$vehicle->is_approved) {
+                return response()->json([
+                    'message' => 'Vehicle updated successfully. The vehicle will need to be approved by an administrator before it appears in the public listing.',
+                    'vehicle' => $vehicle,
+                    'approval_status' => 'pending'
+                ]);
+            } else {
+                return response()->json([
+                    'message' => 'Vehicle updated successfully. Your changes have reset the approval status and the vehicle will need to be re-approved.',
+                    'vehicle' => $vehicle,
+                    'approval_status' => 'pending'
+                ]);
+            }
+
             return response()->json([
                 'message' => 'Vehicle updated successfully',
                 'vehicle' => $vehicle
@@ -385,6 +399,52 @@ class VehicleController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Display a listing of unapproved vehicles.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function unapproved(Request $request)
+    {
+        $query = Vehicle::where('is_approved', false);
+
+        // For regular users, only show their own unapproved vehicles
+        if (!Auth::user()->is_admin) {
+            $query->where('user_id', Auth::id());
+        }
+
+        // Apply the same sorting and filtering options as the main index method
+        if ($request->has('vehicle_type_id') && $request->vehicle_type_id) {
+            $query->where('vehicle_type_id', $request->vehicle_type_id);
+        }
+
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(registration_number) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                    ->orWhereRaw('LOWER(manufacturer) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                    ->orWhereRaw('LOWER(model) LIKE ?', ['%' . strtolower($searchTerm) . '%']);
+            });
+        }
+
+        // Sort results
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
+
+        $allowedSortFields = ['created_at', 'manufacturer', 'model', 'registration_number'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // Paginate results
+        $perPage = $request->input('per_page', 10);
+        $vehicles = $query->paginate($perPage);
+
+        return response()->json($vehicles);
     }
 
     /**
