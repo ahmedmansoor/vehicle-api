@@ -41,11 +41,9 @@ Route::prefix('v1')->group(function () {
 
         // Vehicle routes (authenticated users only)
         Route::post('/vehicles', [VehicleController::class, 'store']);
+        Route::get('/vehicles/unapproved', [VehicleController::class, 'unapproved']);
         Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
         Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
-
-        // Unapproved vehicles route (must come before the approval route)
-        Route::get('/vehicles/unapproved', [VehicleController::class, 'unapproved']);
 
         // Admin-only vehicle approval
         Route::patch('/vehicles/{id}/approve', [VehicleController::class, 'approve']);
