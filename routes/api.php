@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\VehicleTypeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +20,7 @@ use App\Http\Controllers\Auth\LoginController;
 
 // Public routes
 Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::get('/vehicle-types', [VehicleTypeController::class, 'index']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
