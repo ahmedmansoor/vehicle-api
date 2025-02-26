@@ -9,29 +9,34 @@ class Vehicle extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'registration_number',
-        'manufacturer',
+        'make',
         'model',
-        'engine_capacity',
-        'seats',
-        'seat_height',
-        'cargo_capacity',
-        'tonnage',
-        'is_approved',
-        'vehicle_type_id',
+        'year',
+        'license_plate',
+        'color',
         'user_id',
+        'is_approved',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
+        'year' => 'integer',
         'is_approved' => 'boolean',
     ];
 
-    public function vehicleType()
-    {
-        return $this->belongsTo(VehicleType::class);
-    }
-
+    /**
+     * Get the user that owns the vehicle.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);

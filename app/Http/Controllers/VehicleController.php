@@ -7,71 +7,124 @@ use App\Models\VehicleType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 
 class VehicleController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Display a listing of the vehicles.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
     {
-        $query = Vehicle::with('vehicleType', 'user')
-            ->where('is_approved', true)
-            ->orderBy('created_at', 'desc');
-
-        // Filter by vehicle type
-        if ($request->has('vehicle_type_id')) {
-            $query->where('vehicle_type_id', $request->vehicle_type_id);
+        if (Auth::user()->is_admin) {
+            // Admins can see all vehicles
+            $vehicles = Vehicle::all();
+        } else {
+            // Regular users can only see their own vehicles
+            $vehicles = Vehicle::where('user_id', Auth::id())->get();
         }
 
-        // Search by registration number
-        if ($request->has('registration_number')) {
-            $query->where('registration_number', 'like', '%' . $request->registration_number . '%');
-        }
-
-        // Paginate results (default 10 per page)
-        $perPage = $request->per_page ?? 10;
-        $vehicles = $query->paginate($perPage);
-
-        return response()->json($vehicles);
+        return response()->json(['vehicles' => $vehicles]);
     }
 
+    /**
+     * Store a newly created vehicle in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function store(Request $request)
     {
-        $validated = $this->validateVehicle($request);
+        $request->validate([
+            'make' => 'required|string|max:255',
+            'model' => 'required|string|max:255',
+            'year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'license_plate' => 'required|string|max:20|unique:vehicles',
+        ]);
 
-        $validated['user_id'] = Auth::id();
-        $validated['is_approved'] = false;
+        $vehicle = new Vehicle();
+        $vehicle->make = $request->make;
+        $vehicle->model = $request->model;
+        $vehicle->year = $request->year;
+        $vehicle->license_plate = $request->license_plate;
+        $vehicle->user_id = Auth::id();
+        $vehicle->is_approved = false;
+        $vehicle->save();
 
-        $vehicle = Vehicle::create($validated);
-
-        return response()->json($vehicle, 201);
+        return response()->json([
+            'message' => 'Vehicle created successfully',
+            'vehicle' => $vehicle
+        ], 201);
     }
 
-    public function show(Vehicle $vehicle)
+    /**
+     * Display the specified vehicle.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
     {
-        if (!$vehicle->is_approved) {
-            return response()->json(['message' => 'Vehicle not found'], 404);
-        }
+        $vehicle = Vehicle::findOrFail($id);
 
-        return response()->json($vehicle->load('vehicleType', 'user'));
-    }
-
-    public function update(Request $request, Vehicle $vehicle)
-    {
-        // Check if user owns the vehicle
-        if (Auth::id() !== $vehicle->user_id && !Auth::user()->is_admin) {
+        // Check if the user is authorized to view this vehicle
+        if ($vehicle->user_id !== Auth::id() && !Auth::user()->is_admin) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $validated = $this->validateVehicle($request, $vehicle->id);
-
-        $vehicle->update($validated);
-
-        return response()->json($vehicle);
+        return response()->json(['vehicle' => $vehicle]);
     }
 
-    public function destroy(Vehicle $vehicle)
+    /**
+     * Update the specified vehicle in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
     {
-        // Check if user owns the vehicle
-        if (Auth::id() !== $vehicle->user_id && !Auth::user()->is_admin) {
+        $vehicle = Vehicle::findOrFail($id);
+
+        // Check if the user is authorized to update this vehicle
+        if ($vehicle->user_id !== Auth::id() && !Auth::user()->is_admin) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'make' => 'required|string|max:255',
+            'model' => 'required|string|max:255',
+            'year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'license_plate' => 'required|string|max:20|unique:vehicles,license_plate,' . $id,
+        ]);
+
+        $vehicle->make = $request->make;
+        $vehicle->model = $request->model;
+        $vehicle->year = $request->year;
+        $vehicle->license_plate = $request->license_plate;
+        $vehicle->is_approved = false; // Reset approval status on update
+        $vehicle->save();
+
+        return response()->json([
+            'message' => 'Vehicle updated successfully',
+            'vehicle' => $vehicle
+        ]);
+    }
+
+    /**
+     * Remove the specified vehicle from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $vehicle = Vehicle::findOrFail($id);
+
+        // Check if the user is authorized to delete this vehicle
+        if ($vehicle->user_id !== Auth::id() && !Auth::user()->is_admin) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -80,16 +133,27 @@ class VehicleController extends Controller
         return response()->json(['message' => 'Vehicle deleted successfully']);
     }
 
-    public function approve(Vehicle $vehicle)
+    /**
+     * Approve a vehicle (admin only).
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function approve($id)
     {
-        // Only admins can approve vehicles
+        // Check if the user is an admin
         if (!Auth::user()->is_admin) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $vehicle->update(['is_approved' => true]);
+        $vehicle = Vehicle::findOrFail($id);
+        $vehicle->is_approved = true;
+        $vehicle->save();
 
-        return response()->json($vehicle);
+        return response()->json([
+            'message' => 'Vehicle approved successfully',
+            'vehicle' => $vehicle
+        ]);
     }
 
     private function validateVehicle(Request $request, $vehicleId = null)

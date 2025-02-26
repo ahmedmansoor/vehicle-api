@@ -1,29 +1,41 @@
 <?php
 
-use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
-use App\Http\Controllers\VehicleTypeController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "api" middleware group. Make something great!
+|
+*/
 
 // Public routes
-Route::post('/login', [AuthController::class, 'login']);
-Route::get('/vehicles', [VehicleController::class, 'index']);
-Route::get('/vehicles/{vehicle}', [VehicleController::class, 'show']);
-Route::get('/vehicle-types', [VehicleTypeController::class, 'index']);
+Route::post('/login', [LoginController::class, 'login'])->name('login');
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+    // User routes
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
 
-    // User routes (admin only)
+    // Logout route
+    Route::post('/logout', [LoginController::class, 'logout']);
+
+    // Admin-only user creation
     Route::post('/users', [UserController::class, 'store']);
 
-    // Vehicle routes
-    Route::post('/vehicles', [VehicleController::class, 'store']);
-    Route::put('/vehicles/{vehicle}', [VehicleController::class, 'update']);
-    Route::delete('/vehicles/{vehicle}', [VehicleController::class, 'destroy']);
+    // Vehicle routes (authenticated users only)
+    Route::apiResource('vehicles', VehicleController::class);
 
-    // Admin routes
-    Route::patch('/vehicles/{vehicle}/approve', [VehicleController::class, 'approve']);
+    // Admin-only vehicle approval
+    Route::patch('/vehicles/{id}/approve', [VehicleController::class, 'approve']);
 });

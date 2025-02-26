@@ -6,35 +6,49 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
+    /**
+     * Create a new user (admin only).
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function store(Request $request)
     {
-        // Only admins can create users
-        if (!Auth::user() || !Auth::user()->is_admin) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        // Validate admin status
+        if (!Auth::user()->is_admin) {
+            return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
         }
 
-        $validated = $request->validate([
+        // Validate request
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'is_admin' => 'boolean',
+            'password' => ['required', Password::defaults()],
         ]);
 
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Create user
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'is_admin' => $validated['is_admin'] ?? false,
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
         ]);
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        // Generate token
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
+            'message' => 'User created successfully',
             'user' => $user,
-            'token' => $token,
+            'token' => $token
         ], 201);
     }
 }
