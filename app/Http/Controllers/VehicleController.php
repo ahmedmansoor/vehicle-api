@@ -16,17 +16,31 @@ class VehicleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        if (Auth::user()->is_admin) {
-            // Admins can see all vehicles
-            $vehicles = Vehicle::all();
-        } else {
-            // Regular users can only see their own vehicles
-            $vehicles = Vehicle::where('user_id', Auth::id())->get();
+        $query = Vehicle::query();
+
+        // Only show approved vehicles for public view
+        $query->where('is_approved', true);
+
+        // Filter by vehicle type
+        if ($request->has('vehicle_type')) {
+            $query->where('vehicle_type_id', $request->vehicle_type);
         }
 
-        return response()->json(['vehicles' => $vehicles]);
+        // Search by registration number
+        if ($request->has('registration')) {
+            $query->where('registration_number', 'like', '%' . $request->registration . '%');
+        }
+
+        // Sort by creation date (default: newest first)
+        $query->orderBy('created_at', $request->has('order') ? $request->order : 'desc');
+
+        // Paginate results (10 per page default)
+        $perPage = $request->has('per_page') ? $request->per_page : 10;
+        $vehicles = $query->paginate($perPage);
+
+        return response()->json($vehicles);
     }
 
     /**
@@ -37,26 +51,126 @@ class VehicleController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'make' => 'required|string|max:255',
-            'model' => 'required|string|max:255',
-            'year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'license_plate' => 'required|string|max:20|unique:vehicles',
-        ]);
+        try {
+            // First validate all the required fields
+            $validator = Validator::make($request->all(), [
+                'registration_number' => 'required|string|max:255|unique:vehicles',
+                'manufacturer' => 'required|string|max:255',
+                'model' => 'required|string|max:255',
+                'engine_capacity' => 'required|numeric|min:0',
+                'seats' => 'required|integer|min:1',
+            ]);
 
-        $vehicle = new Vehicle();
-        $vehicle->make = $request->make;
-        $vehicle->model = $request->model;
-        $vehicle->year = $request->year;
-        $vehicle->license_plate = $request->license_plate;
-        $vehicle->user_id = Auth::id();
-        $vehicle->is_approved = false;
-        $vehicle->save();
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                    'expected_fields' => [
+                        'registration_number' => 'A unique vehicle registration/license number',
+                        'manufacturer' => 'Vehicle manufacturer name',
+                        'model' => 'Vehicle model name',
+                        'engine_capacity' => 'Engine capacity in liters',
+                        'seats' => 'Number of seats',
+                        'vehicle_type' => 'Vehicle type name (Motorcycle, Car, Pickup Truck) or ID',
+                    ]
+                ], 422);
+            }
 
-        return response()->json([
-            'message' => 'Vehicle created successfully',
-            'vehicle' => $vehicle
-        ], 201);
+            // Process vehicle type (accept either ID or name)
+            $vehicleTypeId = null;
+            $vehicleType = null;
+
+            if ($request->has('vehicle_type_id')) {
+                // If ID is provided directly
+                $vehicleTypeId = $request->vehicle_type_id;
+                $vehicleType = VehicleType::find($vehicleTypeId);
+            } elseif ($request->has('vehicle_type')) {
+                if (is_numeric($request->vehicle_type)) {
+                    // If numeric type is provided
+                    $vehicleTypeId = $request->vehicle_type;
+                    $vehicleType = VehicleType::find($vehicleTypeId);
+                } else {
+                    // If name is provided
+                    $vehicleType = VehicleType::where('name', $request->vehicle_type)->first();
+                    $vehicleTypeId = $vehicleType ? $vehicleType->id : null;
+                }
+            }
+
+            // Validate that we got a valid type
+            if (!$vehicleType) {
+                return response()->json([
+                    'message' => 'Invalid vehicle type',
+                    'valid_types' => VehicleType::pluck('name')->toArray(),
+                    'usage' => 'Provide either "vehicle_type_id" or "vehicle_type" field'
+                ], 422);
+            }
+
+            // Validate type-specific fields
+            $typeSpecificValidator = null;
+
+            switch ($vehicleType->name) {
+                case 'Motorcycle':
+                    $typeSpecificValidator = Validator::make($request->all(), [
+                        'seat_height' => 'required|numeric|min:0',
+                    ]);
+                    break;
+                case 'Car':
+                    $typeSpecificValidator = Validator::make($request->all(), [
+                        'cargo_capacity' => 'required|numeric|min:0',
+                    ]);
+                    break;
+                case 'Pickup Truck':
+                    $typeSpecificValidator = Validator::make($request->all(), [
+                        'tonnage' => 'required|numeric|min:0',
+                    ]);
+                    break;
+            }
+
+            if ($typeSpecificValidator && $typeSpecificValidator->fails()) {
+                return response()->json([
+                    'message' => 'Vehicle type-specific validation failed',
+                    'errors' => $typeSpecificValidator->errors(),
+                    'vehicle_type' => $vehicleType->name,
+                    'required_fields' => $vehicleType->name === 'Motorcycle' ? ['seat_height'] : ($vehicleType->name === 'Car' ? ['cargo_capacity'] : ['tonnage'])
+                ], 422);
+            }
+
+            // Create the vehicle
+            $vehicle = new Vehicle();
+            $vehicle->registration_number = $request->registration_number;
+            $vehicle->manufacturer = $request->manufacturer;
+            $vehicle->model = $request->model;
+            $vehicle->engine_capacity = $request->engine_capacity;
+            $vehicle->seats = $request->seats;
+            $vehicle->vehicle_type_id = $vehicleTypeId;
+            $vehicle->user_id = Auth::id();
+            $vehicle->is_approved = false;
+
+            // Add type-specific fields
+            switch ($vehicleType->name) {
+                case 'Motorcycle':
+                    $vehicle->seat_height = $request->seat_height;
+                    break;
+                case 'Car':
+                    $vehicle->cargo_capacity = $request->cargo_capacity;
+                    break;
+                case 'Pickup Truck':
+                    $vehicle->tonnage = $request->tonnage;
+                    break;
+            }
+
+            $vehicle->save();
+
+            return response()->json([
+                'message' => 'Vehicle created successfully',
+                'vehicle' => $vehicle
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error creating vehicle',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -86,31 +200,172 @@ class VehicleController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $vehicle = Vehicle::findOrFail($id);
+        try {
+            $vehicle = Vehicle::findOrFail($id);
 
-        // Check if the user is authorized to update this vehicle
-        if ($vehicle->user_id !== Auth::id() && !Auth::user()->is_admin) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            // Check if the user is authorized to update this vehicle
+            if ($vehicle->user_id !== Auth::id() && !Auth::user()->is_admin) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+
+            // First validate all the required fields
+            $validator = Validator::make($request->all(), [
+                'registration_number' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('vehicles')->ignore($id),
+                ],
+                'manufacturer' => 'required|string|max:255',
+                'model' => 'required|string|max:255',
+                'engine_capacity' => 'required|numeric|min:0',
+                'seats' => 'required|integer|min:1',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                    'expected_fields' => [
+                        'registration_number' => 'A unique vehicle registration/license number',
+                        'manufacturer' => 'Vehicle manufacturer name',
+                        'model' => 'Vehicle model name',
+                        'engine_capacity' => 'Engine capacity in liters',
+                        'seats' => 'Number of seats',
+                        'vehicle_type' => 'Vehicle type name (Motorcycle, Car, Pickup Truck) or ID',
+                    ]
+                ], 422);
+            }
+
+            // Process vehicle type (accept either ID or name)
+            $vehicleTypeId = null;
+            $vehicleType = null;
+
+            if ($request->has('vehicle_type_id')) {
+                // If ID is provided directly
+                $vehicleTypeId = $request->vehicle_type_id;
+                $vehicleType = VehicleType::find($vehicleTypeId);
+            } elseif ($request->has('vehicle_type')) {
+                if (is_numeric($request->vehicle_type)) {
+                    // If numeric type is provided
+                    $vehicleTypeId = $request->vehicle_type;
+                    $vehicleType = VehicleType::find($vehicleTypeId);
+                } else {
+                    // If name is provided
+                    $vehicleType = VehicleType::where('name', $request->vehicle_type)->first();
+                    $vehicleTypeId = $vehicleType ? $vehicleType->id : null;
+                }
+            } else {
+                // If no type provided, keep existing
+                $vehicleTypeId = $vehicle->vehicle_type_id;
+                $vehicleType = VehicleType::find($vehicleTypeId);
+            }
+
+            // Validate that we got a valid type
+            if (!$vehicleType) {
+                return response()->json([
+                    'message' => 'Invalid vehicle type',
+                    'valid_types' => VehicleType::pluck('name')->toArray(),
+                    'usage' => 'Provide either "vehicle_type_id" or "vehicle_type" field'
+                ], 422);
+            }
+
+            // Check if vehicle type changed
+            $typeChanged = $vehicle->vehicle_type_id !== $vehicleTypeId;
+
+            // Validate type-specific fields if type changed
+            if ($typeChanged) {
+                $typeSpecificValidator = null;
+
+                switch ($vehicleType->name) {
+                    case 'Motorcycle':
+                        $typeSpecificValidator = Validator::make($request->all(), [
+                            'seat_height' => 'required|numeric|min:0',
+                        ]);
+                        break;
+                    case 'Car':
+                        $typeSpecificValidator = Validator::make($request->all(), [
+                            'cargo_capacity' => 'required|numeric|min:0',
+                        ]);
+                        break;
+                    case 'Pickup Truck':
+                        $typeSpecificValidator = Validator::make($request->all(), [
+                            'tonnage' => 'required|numeric|min:0',
+                        ]);
+                        break;
+                }
+
+                if ($typeSpecificValidator && $typeSpecificValidator->fails()) {
+                    return response()->json([
+                        'message' => 'Vehicle type-specific validation failed',
+                        'errors' => $typeSpecificValidator->errors(),
+                        'vehicle_type' => $vehicleType->name,
+                        'required_fields' => $vehicleType->name === 'Motorcycle' ? ['seat_height'] : ($vehicleType->name === 'Car' ? ['cargo_capacity'] : ['tonnage'])
+                    ], 422);
+                }
+            }
+
+            // Update the vehicle
+            $vehicle->registration_number = $request->registration_number;
+            $vehicle->manufacturer = $request->manufacturer;
+            $vehicle->model = $request->model;
+            $vehicle->engine_capacity = $request->engine_capacity;
+            $vehicle->seats = $request->seats;
+            $vehicle->vehicle_type_id = $vehicleTypeId;
+            $vehicle->is_approved = false; // Reset approval status on update
+
+            // Update type-specific fields
+            if ($typeChanged) {
+                // Reset all type-specific fields
+                $vehicle->seat_height = null;
+                $vehicle->cargo_capacity = null;
+                $vehicle->tonnage = null;
+
+                // Set only the relevant field for the new type
+                switch ($vehicleType->name) {
+                    case 'Motorcycle':
+                        $vehicle->seat_height = $request->seat_height;
+                        break;
+                    case 'Car':
+                        $vehicle->cargo_capacity = $request->cargo_capacity;
+                        break;
+                    case 'Pickup Truck':
+                        $vehicle->tonnage = $request->tonnage;
+                        break;
+                }
+            } else {
+                // If type didn't change, just update the relevant field if provided
+                switch ($vehicleType->name) {
+                    case 'Motorcycle':
+                        if ($request->has('seat_height')) {
+                            $vehicle->seat_height = $request->seat_height;
+                        }
+                        break;
+                    case 'Car':
+                        if ($request->has('cargo_capacity')) {
+                            $vehicle->cargo_capacity = $request->cargo_capacity;
+                        }
+                        break;
+                    case 'Pickup Truck':
+                        if ($request->has('tonnage')) {
+                            $vehicle->tonnage = $request->tonnage;
+                        }
+                        break;
+                }
+            }
+
+            $vehicle->save();
+
+            return response()->json([
+                'message' => 'Vehicle updated successfully',
+                'vehicle' => $vehicle
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating vehicle',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $request->validate([
-            'make' => 'required|string|max:255',
-            'model' => 'required|string|max:255',
-            'year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'license_plate' => 'required|string|max:20|unique:vehicles,license_plate,' . $id,
-        ]);
-
-        $vehicle->make = $request->make;
-        $vehicle->model = $request->model;
-        $vehicle->year = $request->year;
-        $vehicle->license_plate = $request->license_plate;
-        $vehicle->is_approved = false; // Reset approval status on update
-        $vehicle->save();
-
-        return response()->json([
-            'message' => 'Vehicle updated successfully',
-            'vehicle' => $vehicle
-        ]);
     }
 
     /**
@@ -154,43 +409,5 @@ class VehicleController extends Controller
             'message' => 'Vehicle approved successfully',
             'vehicle' => $vehicle
         ]);
-    }
-
-    private function validateVehicle(Request $request, $vehicleId = null)
-    {
-        $rules = [
-            'registration_number' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('vehicles')->ignore($vehicleId),
-            ],
-            'manufacturer' => 'required|string|max:255',
-            'model' => 'required|string|max:255',
-            'engine_capacity' => 'required|numeric|min:0',
-            'seats' => 'required|integer|min:1',
-            'vehicle_type_id' => 'required|exists:vehicle_types,id',
-        ];
-
-        // Add type-specific validation rules
-        if ($request->vehicle_type_id) {
-            $vehicleType = VehicleType::find($request->vehicle_type_id);
-
-            if ($vehicleType) {
-                switch ($vehicleType->name) {
-                    case 'Motorcycle':
-                        $rules['seat_height'] = 'required|numeric|min:0';
-                        break;
-                    case 'Car':
-                        $rules['cargo_capacity'] = 'required|numeric|min:0';
-                        break;
-                    case 'Pickup Truck':
-                        $rules['tonnage'] = 'required|numeric|min:0';
-                        break;
-                }
-            }
-        }
-
-        return $request->validate($rules);
     }
 }

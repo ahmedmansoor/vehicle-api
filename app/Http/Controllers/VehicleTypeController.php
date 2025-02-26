@@ -3,13 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\VehicleType;
-use Illuminate\Http\Request;
 
 class VehicleTypeController extends Controller
 {
     public function index()
     {
-        $vehicleTypes = VehicleType::all();
-        return response()->json($vehicleTypes);
+        try {
+            $vehicleTypes = VehicleType::all();
+
+            return response()->json([
+                'success' => true,
+                'data' => $vehicleTypes
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving vehicle types',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
