@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\V1;
 
+use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Http\Request;
@@ -16,7 +17,6 @@ class VehicleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    // In your VehicleController.php
     public function index(Request $request)
     {
         $query = Vehicle::query();

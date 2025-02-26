@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\V1\Auth\LoginController;
+use App\Http\Controllers\V1\UserController;
+use App\Http\Controllers\V1\VehicleController;
+use App\Http\Controllers\V1\VehicleTypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\VehicleController;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\VehicleTypeController;
 
 /*
 |--------------------------------------------------------------------------
