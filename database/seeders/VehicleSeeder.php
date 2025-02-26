@@ -57,6 +57,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 2,
                 'seat_height' => 83.5,
                 'is_approved' => true,
+                'created_at' => '2025-02-20 10:00:00'
             ],
             [
                 'registration_number' => 'MOT002',
@@ -66,6 +67,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 2,
                 'seat_height' => 85.0,
                 'is_approved' => true,
+                'created_at' => '2025-02-21 10:00:00'
             ],
             [
                 'registration_number' => 'MOT003',
@@ -75,6 +77,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 2,
                 'seat_height' => 84.5,
                 'is_approved' => false,
+                'created_at' => '2025-02-22 10:00:00'
             ],
             [
                 'registration_number' => 'MOT004',
@@ -84,6 +87,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 2,
                 'seat_height' => 84.5,
                 'is_approved' => false,
+                'created_at' => '2025-02-23 10:00:00'
             ],
             [
                 'registration_number' => 'MOT005',
@@ -93,6 +97,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 2,
                 'seat_height' => 84.5,
                 'is_approved' => false,
+                'created_at' => '2025-02-24 10:00:00'
             ],
             [
                 'registration_number' => 'MOT006',
@@ -102,6 +107,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 2,
                 'seat_height' => 84.5,
                 'is_approved' => false,
+                'created_at' => '2025-02-25 10:00:00'
             ],
             [
                 'registration_number' => 'MOT007',
@@ -111,6 +117,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 2,
                 'seat_height' => 84.5,
                 'is_approved' => false,
+                'created_at' => '2025-02-26 10:00:00'
             ],
             [
                 'registration_number' => 'MOT008',
@@ -120,6 +127,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 2,
                 'seat_height' => 84.5,
                 'is_approved' => false,
+                'created_at' => '2025-02-27 10:00:00'
             ],
             [
                 'registration_number' => 'MOT009',
@@ -129,6 +137,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 2,
                 'seat_height' => 84.5,
                 'is_approved' => false,
+                'created_at' => '2025-02-27 14:00:00'
             ],
         ];
 
@@ -151,6 +160,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'cargo_capacity' => 450.5,
                 'is_approved' => true,
+                'created_at' => '2025-02-20 10:00:00'
             ],
             [
                 'registration_number' => 'CAR002',
@@ -160,6 +170,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'cargo_capacity' => 420.0,
                 'is_approved' => true,
+                'created_at' => '2025-02-21 10:00:00'
             ],
             [
                 'registration_number' => 'CAR003',
@@ -169,6 +180,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 4,
                 'cargo_capacity' => 380.5,
                 'is_approved' => false,
+                'created_at' => '2025-02-22 10:00:00'
             ],
             [
                 'registration_number' => 'CAR004',
@@ -178,6 +190,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 4,
                 'cargo_capacity' => 350.0,
                 'is_approved' => false,
+                'created_at' => '2025-02-23 10:00:00'
             ],
             [
                 'registration_number' => 'CAR005',
@@ -187,6 +200,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'cargo_capacity' => 400.0,
                 'is_approved' => true,
+                'created_at' => '2025-02-24 10:00:00'
             ],
             [
                 'registration_number' => 'CAR006',
@@ -196,6 +210,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'cargo_capacity' => 450.5,
                 'is_approved' => false,
+                'created_at' => '2025-02-25 10:00:00'
             ],
             [
                 'registration_number' => 'CAR007',
@@ -205,6 +220,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'cargo_capacity' => 450.5,
                 'is_approved' => true,
+                'created_at' => '2025-02-26 10:00:00'
             ],
         ];
 
@@ -227,6 +243,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'tonnage' => 1.5,
                 'is_approved' => true,
+                'created_at' => '2025-02-20 10:00:00'
             ],
             [
                 'registration_number' => 'PIC002',
@@ -236,6 +253,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'tonnage' => 1.2,
                 'is_approved' => true,
+                'created_at' => '2025-02-21 10:00:00'
             ],
             [
                 'registration_number' => 'PIC003',
@@ -245,6 +263,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 6,
                 'tonnage' => 2.0,
                 'is_approved' => false,
+                'created_at' => '2025-02-22 10:00:00'
             ],
             [
                 'registration_number' => 'PIC004',
@@ -254,6 +273,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'tonnage' => 1.2,
                 'is_approved' => true,
+                'created_at' => '2025-02-23 10:00:00'
             ],
             [
                 'registration_number' => 'PIC005',
@@ -263,6 +283,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'tonnage' => 1.2,
                 'is_approved' => true,
+                'created_at' => '2025-02-24 10:00:00'
             ],
             [
                 'registration_number' => 'PIC006',
@@ -272,6 +293,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'tonnage' => 1.2,
                 'is_approved' => true,
+                'created_at' => '2025-02-25 10:00:00'
             ],
             [
                 'registration_number' => 'PIC007',
@@ -281,6 +303,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'tonnage' => 1.2,
                 'is_approved' => true,
+                'created_at' => '2025-02-26 10:00:00'
             ],
             [
                 'registration_number' => 'PIC008',
@@ -290,6 +313,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'tonnage' => 1.2,
                 'is_approved' => true,
+                'created_at' => '2025-02-27 10:00:00'
             ],
             [
                 'registration_number' => 'PIC009',
@@ -299,6 +323,7 @@ class VehicleSeeder extends Seeder
                 'seats' => 5,
                 'tonnage' => 1.2,
                 'is_approved' => true,
+                'created_at' => '2025-02-27 10:00:00'
             ],
         ];
 
