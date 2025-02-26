@@ -16,6 +16,7 @@ class VehicleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    // In your VehicleController.php
     public function index(Request $request)
     {
         $query = Vehicle::query();
@@ -28,9 +29,18 @@ class VehicleController extends Controller
             $query->where('vehicle_type_id', $request->vehicle_type_id);
         }
 
-        // Search by registration number
+        // Search by registration number - with case-insensitive search
         if ($request->has('search') && $request->search) {
-            $query->where('registration_number', 'like', '%' . $request->search . '%');
+            // Use LOWER() function for case-insensitive search
+            $searchTerm = $request->search;
+            $query->whereRaw('LOWER(registration_number) LIKE ?', ['%' . strtolower($searchTerm) . '%']);
+
+            // Other fields:
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(registration_number) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                    ->orWhereRaw('LOWER(manufacturer) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                    ->orWhereRaw('LOWER(model) LIKE ?', ['%' . strtolower($searchTerm) . '%']);
+            });
         }
 
         // Sort results
