@@ -32,7 +32,6 @@ class UserController extends Controller
                 'required',
                 'string',
                 'min:8',
-                'confirmed', // If you want to require password_confirmation field
                 'regex:/[a-z]/', // Must contain lowercase
                 'regex:/[A-Z]/', // Must contain uppercase
                 'regex:/[0-9]/', // Must contain digit
