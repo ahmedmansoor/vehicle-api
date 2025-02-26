@@ -24,7 +24,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [LoginController::class, 'login'])->name('login');
     Route::get('/vehicle-types', [VehicleTypeController::class, 'index']);
     Route::get('/vehicles', [VehicleController::class, 'index']); // Public vehicle listing
-    Route::get('/vehicles/{id}', [VehicleController::class, 'show']); // Public vehicle detail
 
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
@@ -41,13 +40,16 @@ Route::prefix('v1')->group(function () {
 
         // Vehicle routes (authenticated users only)
         Route::post('/vehicles', [VehicleController::class, 'store']);
-        Route::get('/vehicles/unapproved', [VehicleController::class, 'unapproved']);
+        Route::get('/vehicles/unapproved', [VehicleController::class, 'unapproved']); // Specific route first
         Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
         Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
 
         // Admin-only vehicle approval
         Route::patch('/vehicles/{id}/approve', [VehicleController::class, 'approve']);
     });
+
+    // This route needs to be after the more specific routes to avoid conflicts
+    Route::get('/vehicles/{id}', [VehicleController::class, 'show']); // Public vehicle detail
 });
 
 // Fallback for non-existent API endpoints
