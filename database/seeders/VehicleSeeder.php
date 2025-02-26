@@ -76,7 +76,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 998,
                 'seats' => 2,
                 'seat_height' => 84.5,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-22 10:00:00'
             ],
             [
@@ -86,7 +86,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 998,
                 'seats' => 2,
                 'seat_height' => 84.5,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-23 10:00:00'
             ],
             [
@@ -96,7 +96,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 998,
                 'seats' => 2,
                 'seat_height' => 84.5,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-24 10:00:00'
             ],
             [
@@ -106,7 +106,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 998,
                 'seats' => 2,
                 'seat_height' => 84.5,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-25 10:00:00'
             ],
             [
@@ -116,7 +116,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 998,
                 'seats' => 2,
                 'seat_height' => 84.5,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-26 10:00:00'
             ],
             [
@@ -126,7 +126,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 998,
                 'seats' => 2,
                 'seat_height' => 84.5,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-27 10:00:00'
             ],
             [
@@ -136,7 +136,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 998,
                 'seats' => 2,
                 'seat_height' => 84.5,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-27 14:00:00'
             ],
         ];
@@ -179,7 +179,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 5000,
                 'seats' => 4,
                 'cargo_capacity' => 380.5,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-22 10:00:00'
             ],
             [
@@ -189,7 +189,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 6500,
                 'seats' => 4,
                 'cargo_capacity' => 350.0,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-23 10:00:00'
             ],
             [
@@ -209,7 +209,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 2500,
                 'seats' => 5,
                 'cargo_capacity' => 450.5,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-25 10:00:00'
             ],
             [
@@ -262,7 +262,7 @@ class VehicleSeeder extends Seeder
                 'engine_capacity' => 5300,
                 'seats' => 6,
                 'tonnage' => 2.0,
-                'is_approved' => false,
+                'is_approved' => true,
                 'created_at' => '2025-02-22 10:00:00'
             ],
             [
