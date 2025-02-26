@@ -29,13 +29,11 @@ class VehicleController extends Controller
             $query->where('vehicle_type_id', $request->vehicle_type_id);
         }
 
-        // Search by registration number - with case-insensitive search
+        // Search by registration number, manufacturer, or model - with case-insensitive search
         if ($request->has('search') && $request->search) {
-            // Use LOWER() function for case-insensitive search
             $searchTerm = $request->search;
-            $query->whereRaw('LOWER(registration_number) LIKE ?', ['%' . strtolower($searchTerm) . '%']);
 
-            // Other fields:
+            // Use a single where clause with a closure for proper grouping
             $query->where(function ($q) use ($searchTerm) {
                 $q->whereRaw('LOWER(registration_number) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
                     ->orWhereRaw('LOWER(manufacturer) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
