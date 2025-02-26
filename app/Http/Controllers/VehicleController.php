@@ -24,20 +24,29 @@ class VehicleController extends Controller
         $query->where('is_approved', true);
 
         // Filter by vehicle type
-        if ($request->has('vehicle_type')) {
-            $query->where('vehicle_type_id', $request->vehicle_type);
+        if ($request->has('vehicle_type_id') && $request->vehicle_type_id) {
+            $query->where('vehicle_type_id', $request->vehicle_type_id);
         }
 
         // Search by registration number
-        if ($request->has('registration')) {
-            $query->where('registration_number', 'like', '%' . $request->registration . '%');
+        if ($request->has('search') && $request->search) {
+            $query->where('registration_number', 'like', '%' . $request->search . '%');
         }
 
-        // Sort by creation date (default: newest first)
-        $query->orderBy('created_at', $request->has('order') ? $request->order : 'desc');
+        // Sort results
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        // Paginate results (10 per page default)
-        $perPage = $request->has('per_page') ? $request->per_page : 10;
+        // Validate sort field to prevent SQL injection
+        $allowedSortFields = ['created_at', 'manufacturer', 'model', 'registration_number'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // Paginate results
+        $perPage = $request->input('per_page', 10);
         $vehicles = $query->paginate($perPage);
 
         return response()->json($vehicles);
