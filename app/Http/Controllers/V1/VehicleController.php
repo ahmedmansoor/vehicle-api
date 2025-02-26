@@ -202,9 +202,17 @@ class VehicleController extends Controller
     {
         $vehicle = Vehicle::findOrFail($id);
 
-        // Check if the user is authorized to view this vehicle
-        if ($vehicle->user_id !== Auth::id() && !Auth::user()->is_admin) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        // Check if user is authenticated
+        if (Auth::check()) {
+            // Only authenticated users can see unapproved vehicles
+            if (!$vehicle->is_approved && $vehicle->user_id !== Auth::id() && !Auth::user()->is_admin) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+        } else {
+            // For public access, only show approved vehicles
+            if (!$vehicle->is_approved) {
+                return response()->json(['message' => 'Vehicle not found'], 404);
+            }
         }
 
         return response()->json(['vehicle' => $vehicle]);
